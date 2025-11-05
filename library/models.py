@@ -25,7 +25,7 @@ class Genre(models.Model):
 class Book(models.Model):
     title = models.CharField(max_length=100)
     author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True)
-    isbn = models.CharField(max_length=13, unique=True)
+    isbn = models.CharField(max_length=20, unique=True)
     publication_year = models.IntegerField()
     genres = models.ManyToManyField(Genre)
     summary = models.TextField(null=True)
