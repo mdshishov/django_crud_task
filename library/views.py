@@ -16,11 +16,17 @@ class AuthorView(View):
     def get(self, request: WSGIRequest, author_id: int = None):
         if author_id is None:
             authors = Author.objects.all()
-            return JsonResponse({'data': [author.to_dict() for author in authors]})
+            return JsonResponse(
+                {'data': [author.to_dict() for author in authors]},
+                json_dumps_params={'ensure_ascii': False},
+            )
 
         try:
             author = Author.objects.get(id=author_id)
-            return JsonResponse({'data': author.to_dict()})
+            return JsonResponse(
+                {'data': author.to_dict()},
+                json_dumps_params={'ensure_ascii': False},
+            )
         except Author.DoesNotExist:
             return JsonResponse({'error': 'Author not found'}, status=404)
 
@@ -37,7 +43,10 @@ class AuthorView(View):
 
         author = Author(**data)
         author.save()
-        return JsonResponse({'data': author.to_dict()})
+        return JsonResponse(
+            {'data': author.to_dict()},
+            json_dumps_params={'ensure_ascii': False},
+        )
 
     def put(self, request: WSGIRequest, author_id: int = None):
         if author_id is None:
@@ -59,7 +68,10 @@ class AuthorView(View):
         author.birth_date = data.get('birth_date')
         author.save()
 
-        return JsonResponse({'status': 'Updated', 'author': author.to_dict()})
+        return JsonResponse(
+            {'status': 'Updated', 'author': author.to_dict()},
+            json_dumps_params={'ensure_ascii': False},
+        )
 
     def delete(self, request, author_id):
         if author_id is None:
@@ -69,6 +81,9 @@ class AuthorView(View):
             author = Author.objects.get(id=author_id)
             author_dict = author.to_dict()
             author.delete()
-            return JsonResponse({'status': 'Deleted', 'item': author_dict})
+            return JsonResponse(
+                {'status': 'Deleted', 'item': author_dict},
+                json_dumps_params={'ensure_ascii': False},
+            )
         except Author.DoesNotExist:
             return JsonResponse({'error': 'Author not found'}, status=404)
