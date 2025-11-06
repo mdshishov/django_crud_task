@@ -111,8 +111,9 @@
         error.style.display = 'block';
       } else {
         const successMsg = {% if new %} 'Книга успешно добавлена!' {% else %} 'Информация о книге успешно обнолена!' {% endif %}
+        const redirectUrl = {% if new %} "{% url 'book_list' %}" {% else %} "{% url 'book_detail' book_id=book.id %}" {% endif %}
         alert(successMsg);
-        window.location.href = "{% url 'book_list' %}";
+        window.location.href = redirectUrl;
       }
     }
   </script>
