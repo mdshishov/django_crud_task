@@ -60,6 +60,8 @@ class BookView(View):
                 'title': book.title,
                 'author': book.author.full_name(),
             } for book in books]
+            book_list.sort(key=lambda book: book.get('id'))
+
             return render(
                 request,
                 template_name='book_list.html',
