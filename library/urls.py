@@ -21,6 +21,13 @@ from library import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    path('', views.index),
+
+    path('books/', views.BookView.as_view(), name='book_list'),
+    path('books/<int:book_id>/', views.BookView.as_view(), name='book_detail'),
+    path('books/new', views.BookNewView.as_view(), name='book_new'),
+    path('books/<int:book_id>/edit/', views.book_edit),
+
     path('authors/', views.AuthorView.as_view()),
     path('authors/<int:author_id>/', views.AuthorView.as_view()),
 ]

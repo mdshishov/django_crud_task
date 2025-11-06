@@ -7,6 +7,9 @@ class Author(models.Model):
     bio = models.TextField(null=True)
     birth_date = models.DateField(null=True)
 
+    def full_name(self):
+        return self.first_name + ' ' + self.last_name
+
     def to_dict(self):
         return {
             'id': self.pk,
@@ -21,6 +24,13 @@ class Genre(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(null=True)
 
+    def to_dict(self):
+        return {
+            'id': self.pk,
+            'name': self.name,
+            'description': self.description,
+        }
+
 
 class Book(models.Model):
     title = models.CharField(max_length=100)
@@ -30,3 +40,15 @@ class Book(models.Model):
     genres = models.ManyToManyField(Genre)
     co_authors = models.ManyToManyField(Author, blank=True, related_name='co_authors')
     summary = models.TextField(null=True)
+
+    def to_dict(self):
+        return {
+            'id': self.pk,
+            'title': self.title,
+            'author': self.author.to_dict(),
+            'isbn': self.isbn,
+            'publication_year': self.publication_year,
+            'genres': [genre.to_dict() for genre in self.genres.all()],
+            'co_authors': [author.to_dict() for author in self.co_authors.all()],
+            'summary': self.summary,
+        }

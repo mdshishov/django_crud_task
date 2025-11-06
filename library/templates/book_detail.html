@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Библиотека – «{{ book.title }}»{% endblock %}
+
+{% block content %}
+  <h1>Информация о книге</h1>
+  <a href="{% url 'book_list' %}">Вернуться</a>
+
+  <p><b>Название:</b> «{{ book.title }}»</p>
+  <p><b>ISBN:</b> {{ book.isbn }} </p>
+  <p><b>Автор:</b> {{ book.author }} </p>
+  {% if book.co_authors %}
+  <p><b>Соавторы:</b> {{ book.co_authors }}</p>
+  {% endif %}
+  <p><b>Жанры:</b> {{ book.genres }} </p>
+  <p><b>Год издания:</b> {{ book.publication_year }} </p>
+  {% if book.summary %}
+  <p><b>Описание:</b> {{ book.summary }} </p>
+  {% endif %}
+
+  <a href="./edit">Изменить</a>
+{% endblock %}

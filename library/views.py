@@ -2,12 +2,74 @@ import json
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
+from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.views import View
 
-from library.models import Author
+from library.models import Author, Book, Genre
+
+
+@require_http_methods(['GET'])
+def index(request):
+    return redirect('book_list')
+
+
+@require_http_methods(['GET'])
+@csrf_exempt
+def book_edit(request, book_id):
+    try:
+        book = Book.objects.get(id=book_id)
+        return JsonResponse({'status': 'Success!'})
+    except Book.DoesNotExist:
+        return JsonResponse({'error': 'Book not found'}, status=404)
+
+
+@method_decorator(require_http_methods(['GET', 'POST', 'DELETE']), name='dispatch')
+@method_decorator(csrf_exempt, name='dispatch')
+class BookView(View):
+    def get(self, request: WSGIRequest, book_id: int = None):
+        if book_id is None:
+            books = Book.objects.all()
+            book_list = [{
+                'id': book.pk,
+                'title': book.title,
+                'author': book.author.full_name(),
+            } for book in books]
+            return render(
+                request,
+                template_name='book_list.html',
+                context={
+                    'book_list': book_list,
+                },
+            )
+
+        try:
+            book = Book.objects.get(id=book_id)
+            book_dict = {
+                'id': book.pk,
+                'title': book.title,
+                'isbn': book.isbn,
+                'author': book.author.full_name(),
+                'co_authors': ', '.join([co_author.full_name() for co_author in book.co_authors.all()]),
+                'genres': ', '.join([genre.name for genre in book.genres.all()]),
+                'publication_year': book.publication_year,
+                'summary': book.summary,
+            }
+            return render(
+                request,
+                template_name='book_detail.html',
+                context={'book': book_dict},
+            )
+        except Book.DoesNotExist:
+            return JsonResponse({'error': 'Book not found'}, status=404)
+
+
+@method_decorator(require_http_methods(['GET', 'POST']), name='dispatch')
+@method_decorator(csrf_exempt, name='dispatch')
+class BookNewView(View):
+    pass
 
 
 @method_decorator(require_http_methods(['GET', 'POST', 'PUT', 'DELETE']), name='dispatch')
