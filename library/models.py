@@ -28,4 +28,5 @@ class Book(models.Model):
     isbn = models.CharField(max_length=20, unique=True)
     publication_year = models.IntegerField()
     genres = models.ManyToManyField(Genre)
+    co_authors = models.ManyToManyField(Author, blank=True, related_name='co_authors')
     summary = models.TextField(null=True)
