@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if book %}
+Редактирование
+{% else %}
+Новая книга
+{% endif %}
+{% endblock %}
+
+{% block content %}
+  {{ book|json_script:"my-data" }}
+  <h1>
+  {% if new %}
+    Новая книга
+  {% else %}
+    Редактирование
+  {% endif %}
+  </h1>
+  <form id="form">
+    <h2>Основаная информация</h2>
+    <div>
+      <label for="title">Название книги:</label><br/>
+      <input type="text" id="title" name="title" required>
+    </div>
+    <p></p>
+    <div>
+      <label for="isbn">ISBN:</label><br/>
+      <input type="text" id="isbn" name="isbn" required>
+    </div>
+    <p></p>
+    <div>
+      <label for="publication_year">Год издания:</label><br/>
+      <input type="number" id="publication_year" name="publication_year" required min="0" max="2026">
+    </div>
+    <h2>Авторы</h2>
+    <div>
+      <label for="author">Автор:</label><br/>
+      <select id="author" name="author" required>
+        <option value="" disabled selected>Выберите автора</option>
+        {% for author in author_list %}
+        <option value="{{ author.id }}">{{ author.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <p></p>
+    <div>
+      Соавторы:<br/>
+      {% for author in author_list %}
+      <div>
+        <input type="checkbox" id="coauthor_{{ author.id }}" name="coauthors" value="{{ author.id }}">
+        <label for="coauthor_{{ author.id }}">{{ author.full_name }}</label>
+      </div>
+      {% endfor %}
+    </div>
+    <h2>Жанры и описание</h2>
+    <div>
+      Жанры:<br/>
+      {% for genre in genre_list %}
+      <div>
+        <input type="checkbox" id="genre_{{ genre.id }}" name="genres" value="{{ genre.id }}">
+        <label for="genre_{{ genre.id }}">{{ genre.name }}</label>
+      </div>
+      {% endfor %}
+    </div>
+    <p></p>
+    <div>
+      <label for="summary">Краткое описание:</label><br/>
+      <textarea id="summary" name="summary" rows="4" cols="50" style="resize:none"></textarea>
+    </div>
+    <p></p>
+    <div id="error" style="color:red;display:none">Ошибка</div>
+    <button type="submit">Добавить книгу</button>
+  </form>
+  <script>
+    const error = document.getElementById('error');
+    const form = document.getElementById('form');
+    form.addEventListener('submit', submitHandler);
+
+    async function submitHandler (event) {
+      event.preventDefault();
+      error.style.display = 'none';
+
+      formData = new FormData(form);
+      body = {
+        title: formData.get('title'),
+        author: Number(formData.get('author')),
+        isbn: formData.get('isbn'),
+        publication_year: formData.get('publication_year'),
+        genres: formData.getAll('genres').map((genre_id) => Number(genre_id)),
+        co_authors: formData.getAll('coauthors').map((coauthor_id) => Number(coauthor_id)),
+        summary: formData.get('summary'),
+      }
+
+      const response = await fetch("{% url 'book_new' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const data = await response.json()
+        error.textContent = data.error;
+        error.style.display = 'block';
+      } else {
+        alert('Книга успешно добавлена!');
+        window.location.href = "{% url 'book_list' %}";
+      }
+    }
+  </script>
+{% endblock %}

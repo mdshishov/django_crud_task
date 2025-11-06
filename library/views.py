@@ -21,7 +21,18 @@ def index(request):
 def book_edit(request, book_id):
     try:
         book = Book.objects.get(id=book_id)
-        return JsonResponse({'status': 'Success!'})
+        return render(
+            request,
+            'book_form.html',
+            context={
+                'book': book.to_dict(),
+                'author_list': [{
+                    'id': author.pk,
+                    'full_name': author.full_name(),
+                } for author in Author.objects.all()],
+                'genre_list': [genre.to_dict() for genre in Genre.objects.all()],
+            },
+        )
     except Book.DoesNotExist:
         return JsonResponse({'error': 'Book not found'}, status=404)
 
@@ -65,11 +76,70 @@ class BookView(View):
         except Book.DoesNotExist:
             return JsonResponse({'error': 'Book not found'}, status=404)
 
+    def delete(self, request, book_id):
+        if book_id is None:
+            return JsonResponse({'error': 'Bad request'}, status=400)
+
+        try:
+            book = Book.objects.get(id=book_id)
+            book_dict = book.to_dict()
+            book.delete()
+            return JsonResponse(
+                {'status': 'Deleted', 'item': book_dict},
+                json_dumps_params={'ensure_ascii': False},
+            )
+        except Book.DoesNotExist:
+            return JsonResponse({'error': 'Book not found'}, status=404)
+
 
 @method_decorator(require_http_methods(['GET', 'POST']), name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
 class BookNewView(View):
-    pass
+    def get(self, request: WSGIRequest):
+        return render(
+            request,
+            'book_form.html',
+            context={
+                'new': True,
+                'book': None,
+                'author_list': [{
+                    'id': author.pk,
+                    'full_name': author.full_name(),
+                } for author in Author.objects.all()],
+                'genre_list': [genre.to_dict() for genre in Genre.objects.all()],
+            },
+        )
+
+    def post(self, request: WSGIRequest):
+        try:
+            data = json.loads(request.body)
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({'error': 'Wrong JSON'}, status=400)
+
+        if data.get('author') in data.get('co_authors'):
+            return JsonResponse({'error': 'The author cannot be a co-author'}, status=400)
+        if Book.objects.filter(isbn=data.get('isbn')).exists():
+            return JsonResponse({'error': f'Book with ISBN \'{data.get('isbn')}\' already exists'}, status=400)
+        if not data.get('genres') or len(data.get('genres')) == 0:
+            return JsonResponse({'error': 'At least one genre is required'}, status=400)
+
+        try:
+            book = Book.objects.create(
+                title=data.get('title'),
+                author_id=data.get('author'),
+                isbn=data.get('isbn'),
+                publication_year=data.get('publication_year'),
+                summary=data.get('summary'),
+            )
+            book.genres.set(data.get('genres'))
+            book.co_authors.set(data.get('co_authors'))
+
+            return JsonResponse(
+                {'data': book.to_dict()},
+                json_dumps_params={'ensure_ascii': False},
+            )
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
 
 
 @method_decorator(require_http_methods(['GET', 'POST', 'PUT', 'DELETE']), name='dispatch')

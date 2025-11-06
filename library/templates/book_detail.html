@@ -18,5 +18,27 @@
   <p><b>Описание:</b> {{ book.summary }} </p>
   {% endif %}
 
-  <a href="./edit">Изменить</a>
+  <a href="./edit"><button type="button">Изменить</button></a>
+  <button type="button" onclick="deleteBook({{ book_id }})">Удалить</button>
+
+  <script>
+    function deleteBook(bookId) {
+      if (confirm('Вы уверены, что хотите удалить книгу «{{ book.title }}»?')) {
+        fetch(window.location.href, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        .then(response => {
+          if (response.ok) {
+            alert('Книга «{{ book.title }}» успешно удалена!');
+            window.location.href = "{% url 'book_list' %}";
+          } else {
+            alert('Произошла ошибка!');
+          }
+        });
+      }
+    }
+  </script>
 {% endblock %}
